@@ -3,6 +3,7 @@ package com.yym.spring.framework.context;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.yym.spring.framework.annotation.YymAutowired;
@@ -26,11 +27,9 @@ public class YymApplicationContext {
     // 通用IOC容器, 存储 Bean 包装器, 包含bean的元数据(如原始 class、注解信息、依赖项等)
     private Map<String, YymBeanWrapper> factoryBeanInstanceCache = new ConcurrentHashMap<>();
 
-    private String[] configLocations;
     private YymBeanDefinitionReader beanDefinitionReader;
 
     public YymApplicationContext(String... configLocations) {
-        this.configLocations = configLocations;
         try {
             // 1. 定位配置文件
             beanDefinitionReader = new YymBeanDefinitionReader(configLocations);
@@ -93,7 +92,7 @@ public class YymApplicationContext {
      * <p>
      * 此处用到装饰器模式, 为后续AOP提供支持
      */
-    public Object getBean(String beanName) throws Exception {
+    public Object getBean(String beanName) {
 
         // 1. 读取 BeanDefinition 中的元数据信息
         YymBeanDefinition beanDefinition = this.beanDefinitionMap.get(beanName);
@@ -187,5 +186,17 @@ public class YymApplicationContext {
                 continue;
             }
         }
+    }
+
+    public int getBeanDefinitionCount() {
+        return this.beanDefinitionMap.size();
+    }
+
+    public String[] getBeanDefinitionNames() {
+        return this.beanDefinitionMap.keySet().toArray(new String[this.beanDefinitionMap.size()]);
+    }
+
+    public Properties getConfig() {
+        return this.beanDefinitionReader.getConfig();
     }
 }

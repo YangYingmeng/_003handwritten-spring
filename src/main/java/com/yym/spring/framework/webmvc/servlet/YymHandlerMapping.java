@@ -4,7 +4,7 @@ import java.lang.reflect.Method;
 import java.util.regex.Pattern;
 
 /**
- * 保存URL 和 method的映射
+ * 根据请求 URL 查找对应的 Handler（处理器，即 Controller）。
  */
 public class YymHandlerMapping {
 
