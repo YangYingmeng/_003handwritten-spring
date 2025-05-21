@@ -9,6 +9,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.yym.spring.framework.annotation.YymAutowired;
 import com.yym.spring.framework.annotation.YymController;
 import com.yym.spring.framework.annotation.YymService;
+import com.yym.spring.framework.aop.YymJdkDynamicAopProxy;
+import com.yym.spring.framework.aop.config.YymAopConfig;
+import com.yym.spring.framework.aop.support.YymAdvisedSupport;
 import com.yym.spring.framework.beans.YymBeanWrapper;
 import com.yym.spring.framework.beans.config.YymBeanDefinition;
 import com.yym.spring.framework.beans.support.YymBeanDefinitionReader;
@@ -128,12 +131,39 @@ public class YymApplicationContext {
                 Class<?> clazz = Class.forName(className);
                 //2、默认的类名首字母小写
                 instance = clazz.newInstance();
+
+                //==================AOP开始=========================
+                //如果满足条件，就直接返回Proxy对象
+                //1、加载AOP的配置文件
+                YymAdvisedSupport config = instantionAopConfig(beanDefinition);
+                config.setTargetClass(clazz);
+                config.setTarget(instance);
+
+                //判断规则，要不要生成代理类，如果要就覆盖原生对象
+                //如果不要就不做任何处理，返回原生对象
+                if (config.pointCutMath()) {
+                    instance = new YymJdkDynamicAopProxy(config).getProxy();
+                }
+
+                //===================AOP结束========================
                 this.factoryBeanObjectCache.put(beanName, instance);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
         return instance;
+    }
+
+
+    private YymAdvisedSupport instantionAopConfig(YymBeanDefinition beanDefinition) {
+        YymAopConfig config = new YymAopConfig();
+        config.setPointCut(this.beanDefinitionReader.getConfig().getProperty("pointCut"));
+        config.setAspectClass(this.beanDefinitionReader.getConfig().getProperty("aspectClass"));
+        config.setAspectBefore(this.beanDefinitionReader.getConfig().getProperty("aspectBefore"));
+        config.setAspectAfter(this.beanDefinitionReader.getConfig().getProperty("aspectAfter"));
+        config.setAspectAfterThrow(this.beanDefinitionReader.getConfig().getProperty("aspectAfterThrow"));
+        config.setAspectAfterThrowingName(this.beanDefinitionReader.getConfig().getProperty("aspectAfterThrowingName"));
+        return new YymAdvisedSupport(config);
     }
 
     /**
